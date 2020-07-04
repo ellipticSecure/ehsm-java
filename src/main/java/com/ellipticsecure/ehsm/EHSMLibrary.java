@@ -10,9 +10,11 @@
 package com.ellipticsecure.ehsm;
 
 import com.sun.jna.Library;
+import com.sun.jna.Native;
 import com.sun.jna.NativeLong;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.NativeLongByReference;
+import lombok.NonNull;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -28,6 +30,26 @@ import static com.ellipticsecure.ehsm.CKReturnValues.CKR_OK;
  * @author Kobus Grobler
  */
 public interface EHSMLibrary extends Library {
+
+    /**
+     * Retrieves an instance of the EHSMLibrary.
+     *
+     * @param libraryName the name of the shared library file - see getDefaultLibraryName().
+     * @return an instance.
+     */
+    static EHSMLibrary getInstance(@NonNull String libraryName) {
+        return Native.load(libraryName, EHSMLibrary.class);
+    }
+
+    /**
+     * A Utility method that checks the return code from a method and throws EHSMException if it is not CKR_OK.
+     * @param ckr the CK return code
+     */
+    static void throwIfNotOK(long ckr) {
+        if (ckr != CKR_OK) {
+            throw new EHSMException(CKReturnValues.getErrorMessage(ckr),ckr);
+        }
+    }
 
     // Device management functions follow
 
@@ -127,13 +149,10 @@ public interface EHSMLibrary extends Library {
      * @param indexes the path to the public key.
      * @return the Base58 encoded public key (address).
      */
-    static String GetBIP32XPub(EHSMLibrary lib, NativeLong session, int net, int[] indexes) {
+    static String GetBIP32XPub(@NonNull EHSMLibrary lib, @NonNull NativeLong session, int net, @NonNull int[] indexes) {
         byte[] out = new byte[128];
         NativeLongByReference outLen = new NativeLongByReference(new NativeLong(out.length));
-        long r = lib.u32GetBitcoinPub(session, indexes, new NativeLong(indexes.length), out, outLen);
-        if (r != CKR_OK) {
-            throw new EHSMException("Failed to retrieve the BTC public key",r);
-        }
+        throwIfNotOK(lib.u32GetBitcoinPub(session, indexes, new NativeLong(indexes.length), out, outLen));
         byte[] payload = new byte[78];
         ByteBuffer buffer = ByteBuffer.wrap(payload);
         buffer.order(ByteOrder.BIG_ENDIAN);
@@ -199,6 +218,9 @@ public interface EHSMLibrary extends Library {
     //CK_RV C_Login(CK_SESSION_HANDLE hSession, CK_USER_TYPE userType, CK_UTF8CHAR_PTR pPin, CK_ULONG ulPinLen)
     long C_Login(NativeLong hSession, NativeLong userType, String pPin, NativeLong ulPinLen);
 
+    //CK_RV C_Logout(CK_SESSION_HANDLE hSession)
+    long C_Logout(NativeLong hSession);
+
     //CK_RV C_SetPIN(CK_SESSION_HANDLE hSession, CK_UTF8CHAR_PTR pOldPin, CK_ULONG ulOldLen, CK_UTF8CHAR_PTR pNewPin,CK_ULONG ulNewLen
     long C_SetPIN(NativeLong hSession, String pOldPin, NativeLong ulOldLen, String pNewPin,
                   NativeLong ulNewLen);
@@ -209,6 +231,10 @@ public interface EHSMLibrary extends Library {
     //CK_RV C_DestroyObject(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject)
     long C_DestroyObject(NativeLong hSession, NativeLong hObject);
 
+    /**
+     * Returns the default library name for the platform.
+     * @return the library name
+     */
     static String getDefaultLibraryName() {
         String lib = System.getenv("EHSM_LIBRARY");
         if (lib == null) {

@@ -23,9 +23,9 @@ import java.security.NoSuchAlgorithmException;
 
 /**
  * A custom form of base58 is used to encode BitCoin addresses. Note that this is not the same base58 as used by
- * Flickr, which you may see reference to around the internet.<p>
+ * Flickr, which you may see reference to around the internet.
  *
- * Satoshi says: why base-58 instead of standard base-64 encoding?<p>
+ * Satoshi says: why base-58 instead of standard base-64 encoding?
  *
  * <ul>
  * <li>Don't want 0OIl characters that look the same in some fonts and

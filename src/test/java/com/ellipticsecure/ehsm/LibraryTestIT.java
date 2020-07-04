@@ -9,18 +9,16 @@
 
 package com.ellipticsecure.ehsm;
 
-import com.sun.jna.Native;
 import com.sun.jna.NativeLong;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.NativeLongByReference;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.xml.bind.DatatypeConverter;
 
 import static com.ellipticsecure.ehsm.CKFlags.*;
 import static com.ellipticsecure.ehsm.CKReturnValues.*;
@@ -35,8 +33,8 @@ import static junit.framework.TestCase.fail;
  *
  * @author Kobus Grobler
  */
+@Slf4j
 public class LibraryTestIT {
-    private static final Logger logger = LoggerFactory.getLogger(LibraryTestIT.class);
 
     private static final String TEST_PIN = "testsu";
     private static final String TEST_SO_PIN = "testso";
@@ -47,7 +45,7 @@ public class LibraryTestIT {
 
     @BeforeClass
     public static void setupClass() {
-        lib = Native.load(EHSMLibrary.getDefaultLibraryName(), EHSMLibrary.class);
+        lib = EHSMLibrary.getInstance(EHSMLibrary.getDefaultLibraryName());
     }
 
     @Before
@@ -60,7 +58,7 @@ public class LibraryTestIT {
         r = lib.C_GetTokenInfo(slot, info);
         assertEquals("C_GetTokenInfo returned 0x" + Long.toHexString(r), CKR_OK, r);
         if ((info.flags.longValue() & CKF_TOKEN_INITIALIZED) == 0) {
-            logger.info("Device not initialized yet, doing it now.");
+            log.info("Device not initialized yet, doing it now.");
 
             r = lib.C_InitToken(slot,TEST_SO_PIN,new NativeLong(TEST_SO_PIN.length()),
                     String.format("%1$-32s", "testtoken"));
@@ -68,7 +66,7 @@ public class LibraryTestIT {
         }
 
         if ((info.flags.longValue() & CKF_USER_PIN_INITIALIZED) == 0) {
-            logger.info("Device has no PIN set, doing it now.");
+            log.info("Device has no PIN set, doing it now.");
             NativeLong session = getLoggedInSession(slot, 6, CKU_SO, TEST_SO_PIN);
             r = lib.C_InitPIN(session, TEST_PIN, new NativeLong(TEST_PIN.length()));
             assertEquals("C_InitPIN returned 0x" + Long.toHexString(r), r, CKR_OK);
@@ -105,22 +103,22 @@ public class LibraryTestIT {
 
     @Test
     public void tokenInfo() {
-        logger.info("token info test.");
+        log.info("token info test.");
         CKTokenInfo info = new CKTokenInfo();
         long r = lib.C_GetTokenInfo(slot, info);
         assertEquals("C_GetTokenInfo returned 0x" + Long.toHexString(r), CKR_OK, r);
-        logger.info("Token info:{}", info);
+        log.info("Token info:{}", info);
         assertEquals("Manufacturer ID is invalid.",
                 "ellipticSecure", info.getManufacturerID());
     }
 
     @Test
     public void configTest() {
-        logger.info("config test.");
+        log.info("config test.");
         EHSMConfig config = new EHSMConfig();
         long r = lib.u32GetTokenConfig(slot,config);
         assertEquals("u32GetTokenConfig returned 0x" + Long.toHexString(r), CKR_OK, r);
-        logger.info("Config: {}",config);
+        log.info("Config: {}",config);
 
         NativeLong session = getLoggedInSession(slot,CKF_RW_SESSION | CKF_SERIAL_SESSION, CKU_SO, TEST_SO_PIN);
 
@@ -135,7 +133,7 @@ public class LibraryTestIT {
 
         r = lib.u32GetTokenConfig(slot,config);
         assertEquals("u32GetTokenConfig returned 0x" + Long.toHexString(r), CKR_OK, r);
-        logger.info("Config: {}",config);
+        log.info("Config: {}",config);
         assertEquals("u32GetTokenConfig expected 0 for options but got 0x" + Long.toHexString(config.u16BitOptions), 0, config.u16BitOptions);
         assertEquals("u32GetTokenConfig expected 0 for timeout but got 0x" + Long.toHexString(config.u8SessionTimeout), 10, config.u8SessionTimeout);
 
@@ -151,7 +149,7 @@ public class LibraryTestIT {
 
     @Test
     public void factoryReset() {
-        logger.info("Factory reset test.");
+        log.info("Factory reset test.");
         long r = lib.u32FactoryReset(slot);
         // should return CKR_ACTION_PROHIBITED unless button is pressed during test
         assertEquals("u32FactoryReset returned 0x" + Long.toHexString(r), r, CKR_ACTION_PROHIBITED);
@@ -159,7 +157,7 @@ public class LibraryTestIT {
 
     @Test
     public void initPinTest() {
-        logger.info("Performing PIN test.");
+        log.info("Performing PIN test.");
 
         NativeLong session = getLoggedInSession(slot, CKF_RW_SESSION | CKF_SERIAL_SESSION, CKU_SO, TEST_SO_PIN);
         String newSuPin = "newsupin";
@@ -177,27 +175,27 @@ public class LibraryTestIT {
     }
 
     @Test
-    public void btcTest() {
-        logger.info("Performing btc test.");
+    public void btcTest() throws DecoderException {
+        log.info("Performing btc test.");
 
         NativeLong session = getLoggedInSession(slot, CKF_RW_SESSION | CKF_SERIAL_SESSION, CKU_USER, TEST_PIN);
 
         NativeLongByReference pBTCHandle = new NativeLongByReference();
         long r = lib.u32HasBitcoinKey(session, pBTCHandle);
         if (r == CKR_OK) {
-            logger.info("deleting btc key.");
+            log.info("deleting btc key.");
             r = lib.C_DestroyObject(session, pBTCHandle.getValue());
             assertEquals(r, CKR_OK);
             r = lib.u32HasBitcoinKey(session, pBTCHandle);
             assertEquals(r, BTC_KEY_NOT_FOUND);
         } else if (r == BTC_KEY_NOT_FOUND) {
             // OK.
-            logger.debug("btc key not found.");
+            log.debug("btc key not found.");
         } else {
             fail("Failed to get btc key: 0x" + Long.toHexString(r));
         }
 
-        byte[] key = DatatypeConverter.parseHexBinary("000102030405060708090a0b0c0d0e0f");
+        byte[] key = Hex.decodeHex("000102030405060708090a0b0c0d0e0f");
         r = lib.u32ImportBitcoinKey(session, key, new NativeLong(key.length));
         assertEquals("Failed to import btc key: 0x" + Long.toHexString(r), r, CKR_OK);
 
