@@ -215,6 +215,9 @@ public interface EHSMLibrary extends Library {
     //CK_RV C_CloseSession(CK_SESSION_HANDLE hSession)
     long C_CloseSession(NativeLong hSession);
 
+    //CK_RV C_CloseAllSessions(CK_SLOT_ID slotID)
+    long C_CloseAllSessions(NativeLong slotID);
+
     //CK_RV C_Login(CK_SESSION_HANDLE hSession, CK_USER_TYPE userType, CK_UTF8CHAR_PTR pPin, CK_ULONG ulPinLen)
     long C_Login(NativeLong hSession, NativeLong userType, String pPin, NativeLong ulPinLen);
 
@@ -230,6 +233,9 @@ public interface EHSMLibrary extends Library {
 
     //CK_RV C_DestroyObject(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject)
     long C_DestroyObject(NativeLong hSession, NativeLong hObject);
+
+    //CK_RV C_GenerateRandom(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pRandomData, CK_ULONG ulRandomLen)
+    long C_GenerateRandom(NativeLong hSession, byte[] pRandomData, NativeLong ulRandomLen);
 
     /**
      * Returns the default library name for the platform.
