@@ -11,6 +11,7 @@ package com.ellipticsecure.ehsm;
 
 import com.sun.jna.NativeLong;
 import com.sun.jna.Pointer;
+import com.sun.jna.ptr.ByteByReference;
 import com.sun.jna.ptr.NativeLongByReference;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.DecoderException;
@@ -19,13 +20,18 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
 
+import java.io.IOException;
+import java.util.NoSuchElementException;
+
+import static com.ellipticsecure.ehsm.CKAttribute.CKA_CLASS;
+import static com.ellipticsecure.ehsm.CKAttribute.CKA_TOKEN;
 import static com.ellipticsecure.ehsm.CKFlags.*;
+import static com.ellipticsecure.ehsm.CKObjectTypes.CKO_CERTIFICATE;
 import static com.ellipticsecure.ehsm.CKReturnValues.*;
 import static com.ellipticsecure.ehsm.CKUserTypes.CKU_SO;
 import static com.ellipticsecure.ehsm.CKUserTypes.CKU_USER;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Integration Test for the eHSM library.
@@ -38,6 +44,7 @@ class LibraryTestIT {
 
     private static final String TEST_PIN = "testsu";
     private static final String TEST_SO_PIN = "testso";
+    private static final String ELLIPTIC_SECURE = "ellipticSecure";
 
     private static EHSMLibrary lib;
 
@@ -53,10 +60,23 @@ class LibraryTestIT {
         lib.C_Finalize(Pointer.NULL);
         long r = lib.C_Initialize(Pointer.NULL);
         assertEquals(CKR_OK, r,"C_Initialize returned 0x" + Long.toHexString(r));
+
+        CKInfo libInfo = new CKInfo();
+        r = lib.C_GetInfo(libInfo);
+        assertEquals(CKR_OK, r,"C_GetInfo returned 0x" + Long.toHexString(r));
+        log.trace("CKInfo: {}",libInfo);
+        assertTrue(libInfo.cryptokiVersion.major >=2, "Invalid CK version");
+        assertTrue(libInfo.libraryVersion.major >=2, "Invalid library version");
+        if (libInfo.libraryVersion.major == 2) {
+            assertTrue(libInfo.libraryVersion.minor >= 1, "Invalid library version");
+        }
+        assertEquals(ELLIPTIC_SECURE, libInfo.getManufacturerID(),"Invalid manufacturer ID");
+
         slot = getPresentSlot();
         CKTokenInfo info = new CKTokenInfo();
         r = lib.C_GetTokenInfo(slot, info);
         assertEquals(CKR_OK, r, "C_GetTokenInfo returned 0x" + Long.toHexString(r));
+        log.trace("CKTokenInfo: {}",info);
         if ((info.flags.longValue() & CKF_TOKEN_INITIALIZED) == 0) {
             log.info("Device not initialized yet, doing it now.");
 
@@ -108,7 +128,26 @@ class LibraryTestIT {
         long r = lib.C_GetTokenInfo(slot, info);
         assertEquals(CKR_OK, r, "C_GetTokenInfo returned 0x" + Long.toHexString(r));
         log.info("Token info:{}", info);
-        assertEquals("ellipticSecure", info.getManufacturerID(), "Manufacturer ID is invalid.");
+        assertEquals(ELLIPTIC_SECURE, info.getManufacturerID(), "Manufacturer ID is invalid.");
+    }
+
+    @Test
+    void findObjects() throws IOException {
+        log.info("Find objects test.");
+        NativeLong session = getLoggedInSession(slot,CKF_SERIAL_SESSION, CKU_USER, TEST_PIN);
+
+        // this ensures contiguous native structure memory
+        CKAttribute []attributes = (CKAttribute [])new CKAttribute().toArray(2);
+        CKAttribute.setLongAttribute(attributes[0],CKA_CLASS,CKO_CERTIFICATE);
+        CKAttribute.setBoolAttribute(attributes[1],CKA_TOKEN,true);
+
+        try (ObjectHandleIterator it = new ObjectHandleIterator(lib,session,attributes)) {
+            while (it.hasNext()) {
+                log.debug("objectHandle {}", it.next());
+            }
+            // iterate past end and ensure throw
+            assertThrows(NoSuchElementException.class, it::next);
+        }
     }
 
     @Test
@@ -196,6 +235,8 @@ class LibraryTestIT {
             r = lib.C_DestroyObject(session, pBTCHandle.getValue());
             assertEquals(CKR_OK,r);
             r = lib.u32HasBitcoinKey(session, pBTCHandle);
+            if (r == CKR_OK)
+                log.debug("BTC Handle: {}",pBTCHandle.getValue());
             assertEquals(BTC_KEY_NOT_FOUND, r, "Expected BTC_KEY_NOT_FOUND but got 0x" + Long.toHexString(r));
         } else if (r == BTC_KEY_NOT_FOUND) {
             // OK.

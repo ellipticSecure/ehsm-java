@@ -1,13 +1,26 @@
 # This is the Java library to interface with the [eHSM](https://ellipticsecure.com/products/) and [MIRkey](https://ellipticsecure.com/products/) Hardware Security Modules
 
-### Maven dependency:
+Latest release: 1.0.4
+
+### Maven dependency
 ```xml
         <dependency>
             <groupId>com.ellipticsecure</groupId>
             <artifactId>ehsm-java</artifactId>
-            <version>1.0.3</version>
+            <version>1.0.4</version>
         </dependency>
 ```
+### Gradle dependency
+```groovy
+        repositories {
+            mavenCentral()
+        }
+        
+        dependencies {
+            implementation('com.ellipticsecure:ehsm-java')
+        }
+```
+
 
 #### Prerequisites: 
  * Java 8 or later.

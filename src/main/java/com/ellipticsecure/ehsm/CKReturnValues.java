@@ -12,6 +12,11 @@ package com.ellipticsecure.ehsm;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Defines a subset of the CK return values.
+ *
+ * @author Kobus Grobler
+ */
 public class CKReturnValues {
     private CKReturnValues() {
     }
@@ -31,14 +36,18 @@ public class CKReturnValues {
     public static final long BTC_KEY_ALREADY_EXISTS = BTC_KEY_NOT_FOUND + 1;
 
     /**
-     * Returns a text message for the specified CryptoKey return code or null if none found.
-     * Note: not all CKR have been assigned messages here.
+     * Returns a text message for the specified CryptoKey return code.
+     * Note: not all CKR have been assigned individual messages here.
      *
      * @param ckr the CKR_xxx code
-     * @return a text message for the specified CryptoKey return code or null if none found.
+     * @return a text message for the specified CryptoKey return code.
      */
     public static String getErrorMessage(long ckr) {
-        return messages.get(ckr);
+        String msg = messages.get(ckr);
+        if (msg == null) {
+            msg = "CK Error code 0x"+Long.toHexString(ckr);
+        }
+        return msg;
     }
 
     private static final Map<Long, String> messages  = new HashMap<>();
@@ -46,12 +55,13 @@ public class CKReturnValues {
     static {
         messages.put(BTC_KEY_ALREADY_EXISTS, "BIP32 key already exists");
         messages.put(BTC_KEY_NOT_FOUND, "BIP32 Key not found");
-        messages.put(CKR_OBJECT_HANDLE_INVALID, "Object handle is invalid");
+        messages.put(CKR_CRYPTOKI_ALREADY_INITIALIZED,"Library already initialized");
+        messages.put(CKR_CRYPTOKI_NOT_INITIALIZED, "Library not initialized");
         messages.put(CKR_USER_PIN_NOT_INITIALIZED, "User PIN not initialized");
         messages.put(CKR_USER_NOT_LOGGED_IN, "User not logged in");
         messages.put(CKR_PIN_INCORRECT, "Incorrect PIN");
-        messages.put(CKR_CRYPTOKI_NOT_INITIALIZED, "Library not initialized");
-        messages.put(CKR_CRYPTOKI_ALREADY_INITIALIZED,"Library already initialized");
+        messages.put(CKR_OBJECT_HANDLE_INVALID, "Object handle is invalid");
+        messages.put(CKR_ACTION_PROHIBITED,"Action prohibited");
         messages.put(CKR_ARGUMENTS_BAD, "Invalid function arguments");
         messages.put(CKR_FUNCTION_FAILED, "Function failed");
         messages.put(CKR_OK, "OK");

@@ -237,6 +237,29 @@ public interface EHSMLibrary extends Library {
     //CK_RV C_GenerateRandom(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pRandomData, CK_ULONG ulRandomLen)
     long C_GenerateRandom(NativeLong hSession, byte[] pRandomData, NativeLong ulRandomLen);
 
+    //CK_RV C_GetInfo(CK_INFO_PTR pInfo)
+    long C_GetInfo(CKInfo info);
+
+    /**
+     * Note: Use the ObjectHandleIterator class instead of using this function directly.
+     *
+     * Native: CK_RV C_FindObjectsInit(CK_SESSION_HANDLE hSession, CK_ATTRIBUTE_PTR pTemplate, CK_ULONG ulCount)
+     *
+     * @param hSession the session
+     * @param pTemplate the attribute template
+     * @param ulCount the number of attributes in the template (typically use pTemplate.length)
+     * @return CKR_OK or a CKR_xx error code if the function fails
+     */
+    long C_FindObjectsInit(NativeLong hSession, CKAttribute[] pTemplate, NativeLong ulCount);
+
+    //CK_RV C_FindObjects(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE_PTR phObject, CK_ULONG ulMaxObjectCount,
+    //                             CK_ULONG_PTR pulObjectCount)
+    long C_FindObjects(NativeLong hSession, NativeLongByReference phObject, NativeLong ulMaxObjectCount,
+                       NativeLongByReference pulObjectCount);
+
+    //CK_RV C_FindObjectsFinal(CK_SESSION_HANDLE hSession)
+    long C_FindObjectsFinal(NativeLong hSession);
+
     /**
      * Returns the default library name for the platform.
      * @return the library name
