@@ -1,6 +1,6 @@
-# This is the Java library to interface with the [eHSM](https://ellipticsecure.com/products/) and [MIRkey](https://ellipticsecure.com/products/) Hardware Security Modules
+# This is a Java library to interface with the [eHSM](https://ellipticsecure.com/products/ehsm_overview.html) and [MIRkey](https://ellipticsecure.com/products/mirkey_overview.html) Hardware Security Modules
 
-Latest release: 1.0.4
+Latest release: [![javadoc](https://javadoc.io/badge2/com.ellipticsecure/ehsm-java/javadoc.svg)](https://javadoc.io/doc/com.ellipticsecure/ehsm-java)
 
 ### Maven dependency
 ```xml
