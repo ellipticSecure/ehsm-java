@@ -16,8 +16,6 @@ import com.sun.jna.ptr.ByteByReference;
 import com.sun.jna.ptr.NativeLongByReference;
 import lombok.ToString;
 
-import static com.ellipticsecure.ehsm.CKObjectTypes.CKO_CERTIFICATE;
-
 /**
  * This is the CK_ATTRIBUTE structure.
  *
@@ -150,6 +148,14 @@ public class CKAttribute extends Structure {
     public static final long CKA_ALLOWED_MECHANISMS = (CKF_ARRAY_ATTRIBUTE | 0x00000600L);
     public static final long CKA_VENDOR_DEFINED = 0x80000000L;
     public static final long CKA_BTC_CHAIN = CKA_VENDOR_DEFINED + 1;
+    public static final long CKA_PIV_CERT = CKA_BTC_CHAIN + 1;
+
+    // CKA_CERTIFICATE_TYPE attribute types
+    public static final long CKC_X_509 = 0x00000000L;
+    public static final long CKC_X_509_ATTR_CERT = 0x00000001L;
+    public static final long CKC_WTLS = 0x00000002L;
+    public static final long CKC_VENDOR_DEFINED = 0x80000000L;
+    public static final long CKC_OPENPGP = (CKC_VENDOR_DEFINED | 0x00504750);
 
     // CK_ATTRIBUTE_TYPE type
     public NativeLong type;
@@ -177,5 +183,27 @@ public class CKAttribute extends Structure {
         attribute.pValue = boolVal.getPointer();
         attribute.ulValueLen = new NativeLong(1);
         return attribute;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+
+        CKAttribute that = (CKAttribute) o;
+
+        if (!type.equals(that.type)) return false;
+        if (!pValue.equals(that.pValue)) return false;
+        return ulValueLen.equals(that.ulValueLen);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + type.hashCode();
+        result = 31 * result + pValue.hashCode();
+        result = 31 * result + ulValueLen.hashCode();
+        return result;
     }
 }

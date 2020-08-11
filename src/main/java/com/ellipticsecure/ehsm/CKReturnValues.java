@@ -21,12 +21,16 @@ public class CKReturnValues {
     private CKReturnValues() {
     }
 
-    public static final long CKR_OK = 0;
+    public static final long CKR_OK = 0L;
+    public static final long CKR_SLOT_ID_INVALID = 0x3L;
     public static final long CKR_FUNCTION_FAILED = 0x6L;
     public static final long CKR_ARGUMENTS_BAD = 0x00000007L;
     public static final long CKR_ACTION_PROHIBITED = 0x0000001BL;
     public static final long CKR_OBJECT_HANDLE_INVALID = 0x82L;
     public static final long CKR_PIN_INCORRECT = 0xA0;
+    public static final long CKR_SESSION_HANDLE_INVALID = 0xB3;
+    public static final long CKR_SESSION_READ_ONLY = 0xB5;
+    public static final long CKR_USER_ALREADY_LOGGED_IN = 0x100;
     public static final long CKR_USER_NOT_LOGGED_IN = 0x00000101L;
     public static final long CKR_USER_PIN_NOT_INITIALIZED = 0x102L;
     public static final long CKR_CRYPTOKI_NOT_INITIALIZED = 0x190L;
@@ -59,11 +63,15 @@ public class CKReturnValues {
         messages.put(CKR_CRYPTOKI_NOT_INITIALIZED, "Library not initialized");
         messages.put(CKR_USER_PIN_NOT_INITIALIZED, "User PIN not initialized");
         messages.put(CKR_USER_NOT_LOGGED_IN, "User not logged in");
+        messages.put(CKR_SESSION_READ_ONLY,"Read only session");
+        messages.put(CKR_USER_ALREADY_LOGGED_IN,"User already logged in");
+        messages.put(CKR_SESSION_HANDLE_INVALID, "Session handle invalid");
         messages.put(CKR_PIN_INCORRECT, "Incorrect PIN");
         messages.put(CKR_OBJECT_HANDLE_INVALID, "Object handle is invalid");
         messages.put(CKR_ACTION_PROHIBITED,"Action prohibited");
         messages.put(CKR_ARGUMENTS_BAD, "Invalid function arguments");
         messages.put(CKR_FUNCTION_FAILED, "Function failed");
+        messages.put(CKR_SLOT_ID_INVALID, "Slot ID invalid");
         messages.put(CKR_OK, "OK");
     }
 

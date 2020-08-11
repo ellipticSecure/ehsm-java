@@ -11,7 +11,6 @@ package com.ellipticsecure.ehsm;
 
 import com.sun.jna.NativeLong;
 import com.sun.jna.Pointer;
-import com.sun.jna.ptr.ByteByReference;
 import com.sun.jna.ptr.NativeLongByReference;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.DecoderException;
@@ -24,8 +23,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.util.NoSuchElementException;
 
-import static com.ellipticsecure.ehsm.CKAttribute.CKA_CLASS;
-import static com.ellipticsecure.ehsm.CKAttribute.CKA_TOKEN;
+import static com.ellipticsecure.ehsm.CKAttribute.*;
 import static com.ellipticsecure.ehsm.CKFlags.*;
 import static com.ellipticsecure.ehsm.CKObjectTypes.CKO_CERTIFICATE;
 import static com.ellipticsecure.ehsm.CKReturnValues.*;
@@ -140,10 +138,14 @@ class LibraryTestIT {
         CKAttribute []attributes = (CKAttribute [])new CKAttribute().toArray(2);
         CKAttribute.setLongAttribute(attributes[0],CKA_CLASS,CKO_CERTIFICATE);
         CKAttribute.setBoolAttribute(attributes[1],CKA_TOKEN,true);
-
+        CKAttribute []getattr = (CKAttribute [])new CKAttribute().toArray(1);
+        CKAttribute.setBoolAttribute(getattr[0],CKA_PRIVATE,false);
         try (ObjectHandleIterator it = new ObjectHandleIterator(lib,session,attributes)) {
             while (it.hasNext()) {
-                log.debug("objectHandle {}", it.next());
+                NativeLong obj = it.next();
+                log.debug("objectHandle {}", obj);
+                EHSMLibrary.throwIfNotOK(lib.C_GetAttributeValue(session,obj,getattr,new NativeLong(getattr.length)));
+                log.debug("type: "+getattr[0].type+" len:"+getattr[0].ulValueLen+" val:"+getattr[0].pValue.getByte(0));
             }
             // iterate past end and ensure throw
             assertThrows(NoSuchElementException.class, it::next);
@@ -224,7 +226,7 @@ class LibraryTestIT {
 
     @Test
     void btcTest() throws DecoderException {
-        log.info("Performing btc test.");
+        log.info("Performing btc test....");
 
         NativeLong session = getLoggedInSession(slot, CKF_RW_SESSION | CKF_SERIAL_SESSION, CKU_USER, TEST_PIN);
 
