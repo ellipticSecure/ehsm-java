@@ -26,8 +26,10 @@ public class CKReturnValues {
     public static final long CKR_FUNCTION_FAILED = 0x6L;
     public static final long CKR_ARGUMENTS_BAD = 0x00000007L;
     public static final long CKR_ACTION_PROHIBITED = 0x0000001BL;
+    public static final long CKR_DATA_LEN_RANGE = 0x00000021L;
     public static final long CKR_OBJECT_HANDLE_INVALID = 0x82L;
     public static final long CKR_PIN_INCORRECT = 0xA0;
+    public static final long CKR_SESSION_COUNT = 0xB1;
     public static final long CKR_SESSION_HANDLE_INVALID = 0xB3;
     public static final long CKR_SESSION_READ_ONLY = 0xB5;
     public static final long CKR_USER_ALREADY_LOGGED_IN = 0x100;
@@ -66,12 +68,14 @@ public class CKReturnValues {
         messages.put(CKR_SESSION_READ_ONLY,"Read only session");
         messages.put(CKR_USER_ALREADY_LOGGED_IN,"User already logged in");
         messages.put(CKR_SESSION_HANDLE_INVALID, "Session handle invalid");
+        messages.put(CKR_SESSION_COUNT,"Maximum session count reached");
         messages.put(CKR_PIN_INCORRECT, "Incorrect PIN");
         messages.put(CKR_OBJECT_HANDLE_INVALID, "Object handle is invalid");
         messages.put(CKR_ACTION_PROHIBITED,"Action prohibited");
         messages.put(CKR_ARGUMENTS_BAD, "Invalid function arguments");
         messages.put(CKR_FUNCTION_FAILED, "Function failed");
         messages.put(CKR_SLOT_ID_INVALID, "Slot ID invalid");
+        messages.put(CKR_DATA_LEN_RANGE,"Invalid data length");
         messages.put(CKR_OK, "OK");
     }
 

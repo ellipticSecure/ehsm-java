@@ -9,6 +9,7 @@
 
 package com.ellipticsecure.ehsm;
 
+import com.sun.jna.Memory;
 import com.sun.jna.NativeLong;
 import com.sun.jna.Pointer;
 import com.sun.jna.Structure;
@@ -169,6 +170,19 @@ public class CKAttribute extends Structure {
         NativeLongByReference value = new NativeLongByReference(new NativeLong(val));
         attribute.pValue = value.getPointer();
         attribute.ulValueLen = new NativeLong(NativeLong.SIZE);
+        return attribute;
+    }
+
+    public static Memory getFromBytes(byte[] val) {
+        Memory mem = new Memory(val.length);
+        mem.write(0, val, 0, val.length);
+        return mem;
+    }
+
+    public static CKAttribute setBytesAttribute(CKAttribute attribute,long type,Memory val) {
+        attribute.type = new NativeLong(type);
+        attribute.pValue = val;
+        attribute.ulValueLen = new NativeLong(val.size());
         return attribute;
     }
 

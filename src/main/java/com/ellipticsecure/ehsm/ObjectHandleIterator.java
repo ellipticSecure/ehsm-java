@@ -28,6 +28,8 @@ import static com.ellipticsecure.ehsm.CKReturnValues.CKR_OK;
  */
 public class ObjectHandleIterator implements Closeable, Iterator<NativeLong> {
 
+    private static final NativeLong ONE = new NativeLong(1);
+
     private final EHSMLibrary lib;
     private final NativeLong session;
 
@@ -39,7 +41,7 @@ public class ObjectHandleIterator implements Closeable, Iterator<NativeLong> {
         this.session = session;
 
         EHSMLibrary.throwIfNotOK(lib.C_FindObjectsInit(session,attributes,new NativeLong(attributes.length)));
-        long r = lib.C_FindObjects(session, objectHandle, new NativeLong(1), count);
+        long r = lib.C_FindObjects(session, objectHandle, ONE, count);
         if (r != CKR_OK) {
             lib.C_FindObjectsFinal(session);
             EHSMLibrary.throwIfNotOK(r);
@@ -61,11 +63,11 @@ public class ObjectHandleIterator implements Closeable, Iterator<NativeLong> {
 
     @Override
     public NativeLong next() {
-        if (count.getValue().longValue() == 0) {
+        if (!hasNext()) {
             throw new NoSuchElementException();
         }
         NativeLong objHandle = new NativeLong(objectHandle.getValue().longValue());
-        EHSMLibrary.throwIfNotOK(lib.C_FindObjects(session, objectHandle, new NativeLong(1), count));
+        EHSMLibrary.throwIfNotOK(lib.C_FindObjects(session, objectHandle, ONE, count));
         return objHandle;
     }
 }

@@ -240,6 +240,35 @@ public interface EHSMLibrary extends Library {
     // CK_RV C_GetInfo(CK_INFO_PTR pInfo)
     long C_GetInfo(CKInfo info);
 
+    // C_EncryptInit initializes an encryption operation
+    long C_EncryptInit(NativeLong hSession, CKMechanism pMechanism, NativeLong hObject);
+
+    //    CK_RV C_Encrypt(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData, CK_ULONG ulDataLen, CK_BYTE_PTR pEncryptedData,
+    //                    CK_ULONG_PTR pulEncryptedDataLen)
+    long C_Encrypt(NativeLong hSession, byte[] pData, NativeLong ulDataLen, byte[] pEncryptedData,
+                   NativeLongByReference pulEncryptedDataLen);
+
+    //CK_RV C_EncryptUpdate(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData, CK_ULONG ulDataLen, CK_BYTE_PTR pEncryptedData, CK_ULONG_PTR pulEncryptedDataLen)
+    long C_EncryptUpdate(NativeLong hSession, byte[] pData, NativeLong ulDataLen, byte[] pEncryptedData, NativeLongByReference pulEncryptedDataLen);
+
+    //CK_RV C_EncryptFinal(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pEncryptedData, CK_ULONG_PTR pulEncryptedDataLen
+    long C_EncryptFinal(NativeLong hSession, byte[] pEncryptedData, NativeLongByReference pulEncryptedDataLen);
+
+    //CK_RV C_DecryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_OBJECT_HANDLE hObject)
+    long C_DecryptInit(NativeLong hSession, CKMechanism pMechanism, NativeLong hObject);
+
+    //CK_RV C_Decrypt(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pEncryptedData, CK_ULONG ulEncryptedDataLen, CK_BYTE_PTR pData, CK_ULONG_PTR pulDataLen)
+    long C_Decrypt(NativeLong hSession, byte[] pEncryptedData, NativeLong ulEncryptedDataLen, byte[] pData, NativeLongByReference pulDataLen);
+
+    //CK_RV C_DecryptUpdate(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pEncryptedData, CK_ULONG ulEncryptedDataLen, CK_BYTE_PTR pData, CK_ULONG_PTR pDataLen)
+    long C_DecryptUpdate(NativeLong hSession, byte[] pEncryptedData, NativeLong ulEncryptedDataLen, byte[] pData, NativeLongByReference pDataLen);
+
+    //CK_RV C_DecryptFinal(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData, CK_ULONG_PTR pDataLen)
+    long C_DecryptFinal(NativeLong hSession, byte[] pData, NativeLongByReference pDataLen);
+
+    //CK_RV C_GenerateKey(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_ATTRIBUTE_PTR pTemplate, CK_ULONG ulCount, CK_OBJECT_HANDLE_PTR phKey)
+    long C_GenerateKey(NativeLong hSession, CKMechanism pMechanism, CKAttribute[] pTemplate, NativeLong ulCount, NativeLongByReference phKey);
+
     /**
      * Note: Use the ObjectHandleIterator class instead of using this function directly.
      *

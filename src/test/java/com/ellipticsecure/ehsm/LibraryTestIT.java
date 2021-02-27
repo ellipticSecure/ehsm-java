@@ -9,6 +9,7 @@
 
 package com.ellipticsecure.ehsm;
 
+import com.sun.jna.Memory;
 import com.sun.jna.NativeLong;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.NativeLongByReference;
@@ -21,6 +22,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.security.SecureRandom;
+import java.util.Arrays;
 import java.util.NoSuchElementException;
 
 import static com.ellipticsecure.ehsm.CKAttribute.*;
@@ -203,6 +206,52 @@ class LibraryTestIT {
         long r = lib.C_GenerateRandom(session,rnd,new NativeLong(rnd.length));
         assertEquals(CKR_OK, r, "C_GenerateRandom returned 0x" + Long.toHexString(r));
         log.info("Rnd value {}",Hex.encodeHexString(rnd));
+    }
+
+    @Test
+    void cryptoTest() {
+        log.info("Performing crypto test.");
+        NativeLong session = getLoggedInSession(slot, CKF_RW_SESSION | CKF_SERIAL_SESSION, CKU_USER, TEST_PIN);
+
+        CKAttribute []attributes = (CKAttribute [])new CKAttribute().toArray(4);
+        CKAttribute.setLongAttribute(attributes[0],CKA_VALUE_LEN,32);
+        CKAttribute.setBoolAttribute(attributes[1],CKA_TOKEN,false);
+        CKAttribute.setBoolAttribute(attributes[2],CKA_ENCRYPT,true);
+        CKAttribute.setBoolAttribute(attributes[3],CKA_DECRYPT,true);
+
+        NativeLongByReference phKey = new NativeLongByReference();
+        CKMechanism mech = CKMechanism.create(CKMechanism.CKM_AES_KEY_GEN,Pointer.NULL,0);
+        long r = lib.C_GenerateKey(session,mech,attributes,new NativeLong(attributes.length),phKey);
+        assertEquals(CKR_OK, r, "C_GenerateKey returned 0x" + Long.toHexString(r));
+
+        byte[] rnd = new byte[16];
+        r = lib.C_GenerateRandom(session,rnd,new NativeLong(rnd.length));
+        assertEquals(CKR_OK, r, "C_GenerateRandom returned 0x" + Long.toHexString(r));
+        Memory iv = new Memory(rnd.length);
+        iv.write(0,rnd,0,rnd.length);
+        mech = CKMechanism.create(CKMechanism.CKM_AES_CBC_PAD,iv,iv.size());
+
+        r = lib.C_EncryptInit(session,mech,phKey.getValue());
+        assertEquals(CKR_OK, r, "C_EncryptInit returned 0x" + Long.toHexString(r));
+        String clearText ="Hello World!";
+        byte[] data = clearText.getBytes();
+        //byte[] data = new byte[32];
+        //Arrays.fill(data,(byte)1);
+        byte[] enc = new byte[128];
+        NativeLongByReference encLen = new NativeLongByReference(new NativeLong(enc.length));
+        r = lib.C_Encrypt(session,data,new NativeLong(data.length),enc,encLen);
+        assertEquals(CKR_OK, r, "C_Encrypt returned 0x" + Long.toHexString(r));
+
+        r = lib.C_DecryptInit(session,mech,phKey.getValue());
+        assertEquals(CKR_OK, r, "C_DecryptInit returned 0x" + Long.toHexString(r));
+
+        byte[] dec = new byte[128];
+        r = lib.C_Decrypt(session,enc,encLen.getValue(),dec,encLen);
+        assertEquals(CKR_OK, r, "C_Decrypt returned 0x" + Long.toHexString(r));
+        String decStr = new String(dec,0,encLen.getValue().intValue());
+        assertEquals(clearText,decStr);
+        r = lib.C_DestroyObject(session,phKey.getValue());
+        assertEquals(CKR_OK, r, "C_DestroyObject returned 0x" + Long.toHexString(r));
     }
 
     @Test

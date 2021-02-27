@@ -8,7 +8,7 @@ Latest release: [![Maven Central](https://maven-badges.herokuapp.com/maven-centr
         <dependency>
             <groupId>com.ellipticsecure</groupId>
             <artifactId>ehsm-java</artifactId>
-            <version>1.0.5</version>
+            <version>1.0.6</version>
         </dependency>
 ```
 ### Gradle dependency
